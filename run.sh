@@ -4,6 +4,8 @@
 set -x
 . env.sh
 
+PATH=$PATH:/usr/local/bin
+
 function log {
     echo "---------------------------------------"
     echo ${1^^}
