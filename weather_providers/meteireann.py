@@ -164,8 +164,9 @@ class MetEireann(BaseWeatherProvider):
                .format(self.location_lat, self.location_long))
 
         root = self.get_response_xml(url)
-        weather_data = {}
 
+        # the document contains the next day's forecast, in 24 hour-offset datapoints (as
+        # well as longer term forecasts, but we only want the next day).
 	# scan across the next 24 hours looking for high and low temperatures
         temps = []
         for h in range(0, 23):
@@ -174,23 +175,22 @@ class MetEireann(BaseWeatherProvider):
                 temps.append(float(t.get("value")))
 
         temps.sort()
-        weather_data["temperatureMin"] = temps[0]
-        weather_data["temperatureMax"] = temps[-1]
+        temperatureMin = temps[0]
+        temperatureMax = temps[-1]
 
-	# get the symbol for just under 1 hour from now
+        # unfortunately, there's no daily summary field in the document; instead,
+	# get the symbol for just under 1 hour from now (so it's a very near-term
+        # forecast!).  TODO: maybe more than 1 hour would be better?
         hour_string = self.hour_offset_from_now(1)
         for sym in root.findall("./product/time[@from='%s']/location/symbol" % (hour_string)):
-            weather_data["weatherCode"] = sym.get("number")
-
-        logging.info("get_weather() - {}".format(weather_data))
+            weather_code = int(sym.get("number"))
 
         daytime = self.is_daytime(self.location_lat, self.location_long)
-        weather_code = int(weather_data["weatherCode"])
-        # { "temperatureMin": "2.0", "temperatureMax": "15.1", "icon": "mostly_cloudy", "description": "Cloudy with light breezes" }
         weather = {}
-        weather["temperatureMin"] = weather_data["temperatureMin"] if self.units == "metric" else self.c_to_f(weather_data["temperatureMin"])
-        weather["temperatureMax"] = weather_data["temperatureMax"] if self.units == "metric" else self.c_to_f(weather_data["temperatureMax"])
+        weather["temperatureMin"] = temperatureMin if self.units == "metric" else self.c_to_f(temperatureMin)
+        weather["temperatureMax"] = temperatureMax if self.units == "metric" else self.c_to_f(temperatureMax)
         weather["icon"] = self.get_icon_from_met_eireann_weathercode(weather_code, daytime)
         weather["description"] = self.get_description_from_met_eireann_weathercode(weather_code)
         logging.debug(weather)
         return weather
+
