@@ -7,6 +7,7 @@ import logging
 from utility import is_stale
 from weather_providers import climacell, openweathermap, metofficedatahub, metno, meteireann, accuweather, visualcrossing
 from alert_providers import metofficerssfeed
+from alert_providers import meteireann as meteireannalertprovider
 from utility import update_svg, configure_logging
 import textwrap
 import html
@@ -102,12 +103,9 @@ def get_alert_message():
         alert_provider = metofficerssfeed.MetOfficeRssFeed(url)
         alert_message = alert_provider.get_alert()
 
-    # uses the same implementation code as ALERT_METOFFICE_FEED_URL, but this way
-    # if we need them to diverge into different implementations in future, it won't
-    # require users modify their env.sh
     url = os.getenv("ALERT_MET_EIREANN_FEED_URL")
     if url:
-        alert_provider = metofficerssfeed.MetOfficeRssFeed(url)
+        alert_provider = meteireannalertprovider.MetEireannAlertProvider(url)
         alert_message = alert_provider.get_alert()
 
     logging.info("alert - {}".format(alert_message))
