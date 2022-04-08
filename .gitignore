@@ -19,3 +19,4 @@ credentials*
 test.svg
 *.xml
 venv
+cache_
