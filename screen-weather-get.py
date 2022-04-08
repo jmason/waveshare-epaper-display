@@ -48,7 +48,7 @@ def get_weather(location_lat, location_long, units):
         and not use_met_eireann
         and not weathergov_self_id
     ):
-        logging.error("No weather provider has been configured (Climacell, OpenWeatherMap, Weather.gov, MetOffice, AccuWeather, Met.no, VisualCrossing...)")
+        logging.error("No weather provider has been configured (Climacell, OpenWeatherMap, Weather.gov, MetOffice, AccuWeather, Met.no, Met Eireann, VisualCrossing...)")
         sys.exit(1)
 
     if visualcrossing_apikey:
@@ -104,6 +104,7 @@ def get_alert_message(location_lat, location_long):
     alert_message = ""
     alert_metoffice_feed_url = os.getenv("ALERT_METOFFICE_FEED_URL")
     alert_weathergov_self_id = os.getenv("ALERT_WEATHERGOV_SELF_IDENTIFICATION")
+    alert_meteireann_feed_url = os.getenv("ALERT_MET_EIREANN_FEED_URL")
 
     if alert_weathergov_self_id:
         logging.info("Getting weather alert from Weather.gov API")
@@ -112,12 +113,12 @@ def get_alert_message(location_lat, location_long):
 
     elif alert_metoffice_feed_url:
         logging.info("Getting weather alert from Met Office RSS Feed")
-        alert_provider = metofficerssfeed.MetOfficeRssFeed(os.getenv("ALERT_METOFFICE_FEED_URL"))
+        alert_provider = metofficerssfeed.MetOfficeRssFeed(alert_metoffice_feed_url)
         alert_message = alert_provider.get_alert()
 
-    url = os.getenv("ALERT_MET_EIREANN_FEED_URL")
-    if url:
-        alert_provider = meteireannalertprovider.MetEireannAlertProvider(url)
+    elif alert_meteireann_feed_url:
+        logging.info("Getting weather alert from Met Eireann")
+        alert_provider = meteireannalertprovider.MetEireannAlertProvider(alert_meteireann_feed_url)
         alert_message = alert_provider.get_alert()
 
     logging.info("alert - {}".format(alert_message))
