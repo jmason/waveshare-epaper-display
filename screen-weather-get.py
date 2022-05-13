@@ -151,8 +151,8 @@ def main():
     alert_message = format_alert_description(alert_message)
     
     output_dict = {
-        'LOW': "{}{}".format(str(round(weather['temperatureMin'])), degrees),
-        'HIGH': "{}{}".format(str(round(weather['temperatureMax'])), degrees),
+        'LOW_ONE': "{}{}".format(str(round(weather['temperatureMin'])), degrees),
+        'HIGH_ONE': "{}{}".format(str(round(weather['temperatureMax'])), degrees),
         'ICON_ONE': weather["icon"],
         'WEATHER_DESC_1': weather_desc[1],
         'WEATHER_DESC_2': weather_desc[2],
