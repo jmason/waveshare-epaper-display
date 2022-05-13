@@ -8,12 +8,12 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 from googleapiclient.discovery import build
 import outlook_util
-from utility import is_stale, update_svg, configure_logging
+from utility import is_stale, update_svg, configure_logging, get_formatted_date
 
 configure_logging()
 
 # note: increasing this will require updates to the SVG template to accommodate more events
-max_event_results = 4
+max_event_results = 10
 
 google_calendar_id = os.getenv("GOOGLE_CALENDAR_ID", "primary")
 outlook_calendar_id = os.getenv("OUTLOOK_CALENDAR_ID", None)
@@ -27,13 +27,15 @@ def get_outlook_events(max_event_results):
 
     if is_stale(os.getcwd() + "/" + outlook_calendar_pickle, ttl):
         logging.debug("Pickle is stale, calling the Outlook Calendar API")
-        today_midnight = datetime.datetime.combine(datetime.datetime.utcnow(), datetime.datetime.min.time()).isoformat()
+        today_start_time = datetime.datetime.utcnow().isoformat()
+        if os.getenv("CALENDAR_INCLUDE_PAST_EVENTS_FOR_TODAY", "0") == "1":
+            today_start_time = datetime.datetime.combine(datetime.datetime.utcnow(), datetime.datetime.min.time()).isoformat()
         oneyearlater_iso = (datetime.datetime.now().astimezone()
                             + datetime.timedelta(days=365)).astimezone().isoformat()
         access_token = outlook_util.get_access_token()
         events_data = outlook_util.get_outlook_calendar_events(
                                                                 outlook_calendar_id,
-                                                                today_midnight,
+                                                                today_start_time,
                                                                 oneyearlater_iso,
                                                                 access_token)
         logging.debug(events_data)
@@ -103,11 +105,13 @@ def get_google_events(max_event_results):
     if is_stale(os.getcwd() + "/" + google_calendar_pickle, ttl):
         logging.debug("Pickle is stale, calling the Calendar API")
 
-        today_midnight = datetime.datetime.combine(datetime.datetime.utcnow(), datetime.datetime.min.time())
+        today_start_time = datetime.datetime.utcnow()
+        if os.getenv("CALENDAR_INCLUDE_PAST_EVENTS_FOR_TODAY", "0") == "1":
+            today_start_time = datetime.datetime.combine(datetime.datetime.utcnow(), datetime.datetime.min.time())
         # Call the Calendar API
         events_result = service.events().list(
             calendarId=google_calendar_id,
-            timeMin=today_midnight.isoformat() + 'Z',
+            timeMin=today_start_time.isoformat() + 'Z',
             maxResults=max_event_results,
             singleEvents=True,
             orderBy='startTime').execute()
@@ -162,15 +166,25 @@ def get_google_datetime_formatted(event_start, event_end):
         start_date = datetime.datetime.strptime(event_start.get('dateTime'), "%Y-%m-%dT%H:%M:%S%z")
         end_date = datetime.datetime.strptime(event_end.get('dateTime'), "%Y-%m-%dT%H:%M:%S%z")
         if(start_date.date() == end_date.date()):
-            start_formatted = format_date(start_date)
+            start_formatted = get_formatted_date(start_date)
             end_formatted = end_date.strftime("%-I:%M %p")
         else:
-            start_formatted = format_date(start_date)
-            end_formatted = format_date(end_date)
+            start_formatted = get_formatted_date(start_date)
+            end_formatted = get_formatted_date(end_date)
         day = "{} - {}".format(start_formatted, end_formatted)
     else:
-        start = event_start.get('date')
-        day = time.strftime("%a %b %-d", time.strptime(start, "%Y-%m-%d"))
+        start = datetime.datetime.strptime(event_start.get('date'), "%Y-%m-%d")
+        end = datetime.datetime.strptime(event_end.get('date'), "%Y-%m-%d")
+        # Google Calendar marks the 'end' of all-day-events as 
+        # the day _after_ the last day. eg, Today's all day event ends tomorrow!
+        # So subtract a day
+        end = end - datetime.timedelta(days=1)
+        start_day = get_formatted_date(start, include_time=False)
+        end_day = get_formatted_date(end, include_time=False)
+        if start == end:
+            day = start_day
+        else:
+            day = "{} - {}".format(start_day, end_day)
     return day
 
 

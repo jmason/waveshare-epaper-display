@@ -2,13 +2,14 @@ import sys
 import json
 import logging
 import datetime
+from tracemalloc import start
 import requests
 import msal
 import atexit
 import os
 import time
 from datetime import timezone
-from utility import configure_logging
+from utility import configure_logging, get_formatted_date
 from dateutil import tz
 
 configure_logging()
@@ -75,7 +76,16 @@ def get_outlook_datetime_formatted(event):
     end_date = datetime.datetime.strptime(event["end"]["dateTime"], "%Y-%m-%dT%H:%M:%S.0000000")
     
     if event['isAllDay'] == True:
-        day = start_date.strftime("%a %b %-d")
+        # Outlook Calendar marks the 'end' of all-day-events as 
+        # the day _after_ the last day. eg, Today's all day event ends tomorrow midnight.
+        # So subtract a day
+        end_date = end_date - datetime.timedelta(days=1)
+        start_day = get_formatted_date(start_date, include_time=False)
+        end_day = get_formatted_date(end_date, include_time=False)
+        if start_day == end_day:
+            day = start_day
+        else:
+            day = "{} - {}".format(start_day, end_day)
     else:
         # Convert start/end to local time
         start_date = start_date.replace(tzinfo=tz.tzutc())
@@ -83,11 +93,11 @@ def get_outlook_datetime_formatted(event):
         end_date = end_date.replace(tzinfo=tz.tzutc())
         end_date = end_date.astimezone(tz.tzlocal())
         if(start_date.date() == end_date.date()):
-            start_formatted = start_date.strftime("%a %b %-d, %-I:%M %p")
+            start_formatted = get_formatted_date(start_date)
             end_formatted = end_date.strftime("%-I:%M %p")
         else:
-            start_formatted = start_date.strftime("%a %b %-d, %-I:%M %p")
-            end_formatted = end_date.strftime("%a %b %-d, %-I:%M %p")
+            start_formatted = get_formatted_date(start_date)
+            end_formatted = get_formatted_date(end_date)
         day = "{} - {}".format(start_formatted, end_formatted)
     return day
 

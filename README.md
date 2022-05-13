@@ -10,7 +10,7 @@ customisations:
 * Use my preferred screen template
 * Always refresh the screen fully on (hourly) updates, to accomodate the 3-colour screen's limitations
 
-![example](display.jpg)
+![example](screenshots/display.png)
 
 
 - [Shopping list](#shopping-list)
@@ -34,7 +34,10 @@ customisations:
 - [Pick a Calendar provider](#pick-a-calendar-provider)
   - [Google Calendar setup](#google-calendar-setup)
   - [Outlook Calendar](#outlook-calendar)
+- [Pick a layout](#pick-a-layout)
 - [Run it](#run-it)
+  - [Automate it](#automate-it)
+- [Adding custom data](#adding-custom-data)
 - [Troubleshooting](#troubleshooting)
 - [Waveshare documentation and sample code](#waveshare-documentation-and-sample-code)
 
@@ -206,11 +209,10 @@ Warning: YMMV. During my testing, I found the weather.gov API would start return
 
 ### Met Éireann (Ireland)
 
-To use alerts from Met Éireann, uncomment the environment variable:
+To use alerts from Met Éireann, visit  https://www.met.ie/Open_Data/json/ and choose the appropriate "warning_EIXX" JSON file for your region, using each county's FIPS code.  This code can be found in the table on http://www.statoids.com/uie.html,
+in the pre-2014 section.  For example, this is the file for Dublin:
 
-    export ALERT_MET_EIREANN_FEED_URL=https://www.met.ie/warningsxml/rss.xml
-
-Note that these alerts are nation wide and is not filtered by specific location. 
+    export ALERT_MET_EIREANN_FEED_URL=https://www.met.ie/Open_Data/json/warning_EI07.json
 
 ## Pick a Calendar provider
 
@@ -258,6 +260,21 @@ Copy the ID of the calendar you want, and add it to env.sh like so:
 
 Note that if you set an Outlook Calendar ID, the Google Calendar will be ignored.  
 
+## Pick a layout
+
+This is an optional step.  There are a few different layouts to choose from.  
+
+
+| `export SCREEN_LAYOUT=1` <br />This is the default | `export SCREEN_LAYOUT=2` <br />More calendar entries and less emphasis on weather and time | 
+| --- | --- | 
+| [![Layout 1](screenshots/001.png)](screenshots/001.png) | [![Layout 2](screenshots/002.png)](screenshots/002.png) | 
+
+| `export SCREEN_LAYOUT=3` <br />Calendar entries on left, less emphasis on weather | `export SCREEN_LAYOUT=4` <br />Shows hour instead of time. Meant for color screens. | 
+| --- | --- | 
+| [![Layout 3](screenshots/003.png)](screenshots/003.png) | [![Layout 4](screenshots/004.png)](screenshots/004.png) | 
+
+
+
 
 ### HomeAssistant settings
 
@@ -295,6 +312,15 @@ Add this entry so it runs every hour:
 This will cause the script to run every hour, and write the output as well as errors to a file called LOG.  You can potentially
 run this more frequently, but note that every refresh involves 30 seconds of screen flashing, which is quite intrusive.
 
+
+## Adding custom data
+
+Optionally, it's possible to add your own custom data to the screen. For example this could be API calls, data from Home Assistant, PiHole stats, or something external. 
+
+Rename `screen-custom-get.py.sample` to `screen-custom-get.py`. Do your custom code, and set the value of `custom_value_1` to the value you want to display. Run `./run.sh` and it'll appear on screen. 
+
+Next, modify `screen-custom.svg` and change the various x, y, font size values to adjust its appearance and position. 
+You can add more values by adding more SVG elements for custom_value_2, custom_value_3, and so on, and set its value in the `output_dict` in `screen-custom.get.py`.  
 
 ## Troubleshooting
 

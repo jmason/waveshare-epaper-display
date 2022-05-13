@@ -10,6 +10,7 @@ only_red.png
 only_red.pnm
 *.pyc
 screen-output*
+screen-custom-get.py
 env.sh
 *.log
 *.pickle

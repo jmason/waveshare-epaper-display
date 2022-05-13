@@ -14,7 +14,7 @@ function log {
 
 # crash out if any of these fail
 
-log "Get Weather info"
+log "Add weather info"
 timeout $TIMEOUT python3 screen-weather-get.py || \
     timeout $TIMEOUT python3 screen-weather-get.py || \
     timeout $TIMEOUT python3 screen-weather-get.py || exit 1
@@ -24,10 +24,19 @@ timeout $TIMEOUT python3 screen-homeassistant-get.py || \
     timeout $TIMEOUT python3 screen-homeassistant-get.py || \
     timeout $TIMEOUT python3 screen-homeassistant-get.py || exit 1
 
-log "Get Calendar info"
+log "Add Calendar info"
 timeout $TIMEOUT python3 screen-calendar-get.py || \
     timeout $TIMEOUT python3 screen-calendar-get.py || \
     timeout $TIMEOUT python3 screen-calendar-get.py || exit 1
+
+if [ -f screen-custom-get.py ]; then
+    log "Add Custom data"
+    python3 screen-custom-get.py    
+elif [ ! -f screen-output-custom-temp.svg ]; then
+    # Create temporary empty svg since the main SVG needs it
+    echo "<svg />" > screen-output-custom-temp.svg
+fi
+
 
 log "Export to PNG"
 
