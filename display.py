@@ -23,12 +23,12 @@ try:
     epd.init()
 
     # Always do a full refresh
-    epd.Clear()
+    # epd.Clear()
 
     #Full screen refresh at 2 AM
-    # if datetime.datetime.now().minute == 0 and datetime.datetime.now().hour == 2:
-        # logging.debug("Clear screen")
-        # epd.Clear()
+    if datetime.datetime.now().minute == 0 and datetime.datetime.now().hour == 2:
+        logging.debug("Clear screen")
+        epd.Clear()
 
     logging.debug("Read image files")
     black_image = Image.open(sys.argv[1])
@@ -37,7 +37,6 @@ try:
     logging.info("Display image file on screen")
     epd.display(epd.getbuffer(black_image), epd.getbuffer(red_image))
     epd.sleep()
-    epd.Dev_exit()
 
 except IOError as e:
     logging.exception(e)

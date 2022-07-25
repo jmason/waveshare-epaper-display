@@ -121,8 +121,8 @@ def get_xml_from_url(url, headers, cache_file_name, ttl):
                 text_file.write(response_data)
         except Exception as error:
             logging.error(error)
-            logging.error(response.text)
-            logging.error(response.headers)
+            # logging.error(response.text)
+            # logging.error(response.headers)
             raise
     else:
         logging.info("Found in cache.")
