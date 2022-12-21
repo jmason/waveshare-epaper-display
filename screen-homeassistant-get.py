@@ -41,7 +41,7 @@ def scrape_sensors(output):
 def parse_binary_sensor(j):
   try:
     val = j["state"]
-    if "on" in val:
+    if val == "on":
       return charge_icon
     else:
       return ""
@@ -50,7 +50,7 @@ def parse_binary_sensor(j):
 
 def parse_sensor(j):
   try:
-    val = str(int(j["state"]))
+    val = str(j["state"])
     # support this weird API for MercedesME: https://community.home-assistant.io/t/mercedes-me-component/41911/590
     if "attributes" in j:
       attrs = j["attributes"]
