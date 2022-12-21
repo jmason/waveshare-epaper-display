@@ -10,6 +10,7 @@ from alert_providers import meteireann as meteireannalertprovider
 from utility import update_svg, configure_logging
 import textwrap
 import html
+import json
 
 configure_logging()
 
@@ -106,22 +107,27 @@ def get_alert_message(location_lat, location_long):
     alert_weathergov_self_id = os.getenv("ALERT_WEATHERGOV_SELF_IDENTIFICATION")
     alert_meteireann_feed_url = os.getenv("ALERT_MET_EIREANN_FEED_URL")
 
-    if alert_weathergov_self_id:
-        logging.info("Getting weather alert from Weather.gov API")
-        alert_provider = weathergovalerts.WeatherGovAlerts(location_lat, location_long, alert_weathergov_self_id)
-        alert_message = alert_provider.get_alert()
+    try:
+        if alert_weathergov_self_id:
+            logging.info("Getting weather alert from Weather.gov API")
+            alert_provider = weathergovalerts.WeatherGovAlerts(location_lat, location_long, alert_weathergov_self_id)
+            alert_message = alert_provider.get_alert()
 
-    elif alert_metoffice_feed_url:
-        logging.info("Getting weather alert from Met Office RSS Feed")
-        alert_provider = metofficerssfeed.MetOfficeRssFeed(alert_metoffice_feed_url)
-        alert_message = alert_provider.get_alert()
+        elif alert_metoffice_feed_url:
+            logging.info("Getting weather alert from Met Office RSS Feed")
+            alert_provider = metofficerssfeed.MetOfficeRssFeed(alert_metoffice_feed_url)
+            alert_message = alert_provider.get_alert()
 
-    elif alert_meteireann_feed_url:
-        logging.info("Getting weather alert from Met Eireann")
-        alert_provider = meteireannalertprovider.MetEireannAlertProvider(alert_meteireann_feed_url)
-        alert_message = alert_provider.get_alert()
+        elif alert_meteireann_feed_url:
+            logging.info("Getting weather alert from Met Eireann")
+            alert_provider = meteireannalertprovider.MetEireannAlertProvider(alert_meteireann_feed_url)
+            alert_message = alert_provider.get_alert()
 
-    logging.info("alert - {}".format(alert_message))
+        logging.info("alert - {}".format(alert_message))
+
+    except json.decoder.JSONDecodeError as e:
+        logging.error("Unable to fetch alert payload, ignoring alert")
+
     return alert_message
 
 
